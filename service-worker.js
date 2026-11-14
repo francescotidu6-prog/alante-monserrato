@@ -1,6 +1,7 @@
 "use strict";
 
-var CACHE_NAME = "monserrato-pwa-v1";
+var CACHE_NAME = "monserrato-pwa-v2";
+var DIMENSIONE_PMTILES = 239298;
 var FILES = [
   "./",
   "./index.html",
@@ -35,10 +36,72 @@ self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function (cache) {
-        return cache.addAll(FILES.map(urlLocale));
+        return Promise.all(FILES.map(function (percorso) {
+          var url = urlLocale(percorso);
+          return fetch(url, { cache: "reload" })
+            .then(function (response) {
+              if (!response.ok) {
+                throw new Error(url + " — HTTP " + response.status);
+              }
+              return cache.put(url, response);
+            })
+            .catch(function () {
+              return null;
+            });
+        }));
       })
       .then(function () {
         return self.skipWaiting();
+      })
+  );
+});
+
+function verificaCache() {
+  return caches.open(CACHE_NAME).then(function (cache) {
+    return Promise.all(FILES.map(function (percorso) {
+      return cache.match(urlLocale(percorso)).then(function (response) {
+        return response ? null : percorso;
+      });
+    })).then(function (risultati) {
+      var mancanti = risultati.filter(function (risultato) {
+        return risultato !== null;
+      });
+
+      return cache.match(urlLocale("./prova.pmtiles")).then(function (response) {
+        if (!response) {
+          return { ok: false, missing: mancanti, pmtilesSize: 0, cache: CACHE_NAME };
+        }
+        return response.clone().arrayBuffer().then(function (buffer) {
+          if (buffer.byteLength !== DIMENSIONE_PMTILES) {
+            mancanti.push("./prova.pmtiles (dimensione " + buffer.byteLength + ")");
+          }
+          return {
+            ok: mancanti.length === 0,
+            missing: mancanti,
+            pmtilesSize: buffer.byteLength,
+            cache: CACHE_NAME
+          };
+        });
+      });
+    });
+  });
+}
+
+self.addEventListener("message", function (event) {
+  if (!event.data || event.data.type !== "CHECK_OFFLINE" || !event.ports[0]) {
+    return;
+  }
+  event.waitUntil(
+    verificaCache()
+      .then(function (esito) {
+        event.ports[0].postMessage(esito);
+      })
+      .catch(function (error) {
+        event.ports[0].postMessage({
+          ok: false,
+          missing: ["service-worker.js: " + (error.message || String(error))],
+          cache: CACHE_NAME
+        });
       })
   );
 });

@@ -52,6 +52,8 @@ body {
 
 #errore {
   color: #9f1b1b;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .maplibregl-ctrl-top-right {
