@@ -2,9 +2,21 @@
   "use strict";
 
   var DIMENSIONE_PMTILES = 239298;
+  var ZOOM_TILE = 15;
+  var DIMENSIONE_TILE = 512;
+  var COLONNE_TILE = 2;
+  var RIGHE_TILE = 1;
+  var MARGINE_BORDO = 8;
+  var ZOOM_INIZIALE_BASE = 15.2;
+  var LIMITI_TILE = [
+    [9.129638671875, 39.249270846223],
+    [9.151611328125, 39.257778150283]
+  ];
+  var CENTRO_TILE = [9.140625, 39.253524627276];
   var stato = document.getElementById("stato");
   var offline = document.getElementById("offline");
   var errore = document.getElementById("errore");
+  var tornaMappa = document.getElementById("torna-mappa");
   var base = new URL("./", window.location.href);
 
   function percorsoLocale(percorso) {
@@ -73,7 +85,7 @@
     }
 
     offline.textContent = "Verifica della cache offline…";
-    navigator.serviceWorker.register("./service-worker.js?v=3", {
+    navigator.serviceWorker.register("./service-worker.js?v=4", {
       scope: "./",
       updateViaCache: "none"
     })
@@ -94,6 +106,19 @@
         offline.classList.remove("pronto");
         mostraErrore("service-worker.js", descriviErrore(error));
       });
+  }
+
+  function calcolaZoomMinimo(contenitore) {
+    var larghezza = contenitore.clientWidth + MARGINE_BORDO * 2;
+    var altezza = contenitore.clientHeight + MARGINE_BORDO * 2;
+    var zoomLarghezza = ZOOM_TILE + Math.log(
+      larghezza / (COLONNE_TILE * DIMENSIONE_TILE)
+    ) / Math.LN2;
+    var zoomAltezza = ZOOM_TILE + Math.log(
+      altezza / (RIGHE_TILE * DIMENSIONE_TILE)
+    ) / Math.LN2;
+
+    return Math.max(14, zoomLarghezza, zoomAltezza);
   }
 
   function creaMappa(buffer) {
@@ -123,12 +148,17 @@
       )
     };
 
+    var contenitore = document.getElementById("map");
+    var zoomMinimo = calcolaZoomMinimo(contenitore);
+    var zoomIniziale = Math.max(ZOOM_INIZIALE_BASE, zoomMinimo);
     var mappa = new maplibregl.Map({
       container: "map",
       style: stile,
-      center: [9.138716, 39.252645],
-      zoom: 15.2,
+      center: CENTRO_TILE,
+      zoom: zoomIniziale,
+      minZoom: zoomMinimo,
       maxZoom: 19,
+      maxBounds: LIMITI_TILE,
       renderWorldCopies: false,
       attributionControl: true
     });
@@ -136,6 +166,7 @@
     mappa.addControl(new maplibregl.NavigationControl(), "top-right");
     mappa.on("load", function () {
       stato.textContent = "Mappa caricata.";
+      tornaMappa.disabled = false;
     });
     mappa.on("error", function (evento) {
       var dettaglio = evento && evento.error
@@ -145,6 +176,29 @@
         ? evento.error.url
         : (evento && evento.sourceId ? "sorgente " + evento.sourceId : "stile, font o icona");
       mostraErrore(richiesta, dettaglio);
+    });
+
+    tornaMappa.addEventListener("click", function () {
+      zoomMinimo = calcolaZoomMinimo(contenitore);
+      zoomIniziale = Math.max(ZOOM_INIZIALE_BASE, zoomMinimo);
+      mappa.setMinZoom(zoomMinimo);
+      mappa.setMaxBounds(LIMITI_TILE);
+      mappa.easeTo({
+        center: CENTRO_TILE,
+        zoom: zoomIniziale,
+        bearing: 0,
+        pitch: 0
+      });
+    });
+
+    window.addEventListener("resize", function () {
+      zoomMinimo = calcolaZoomMinimo(contenitore);
+      zoomIniziale = Math.max(ZOOM_INIZIALE_BASE, zoomMinimo);
+      mappa.setMinZoom(zoomMinimo);
+      mappa.setMaxBounds(LIMITI_TILE);
+      if (mappa.getZoom() < zoomMinimo) {
+        mappa.jumpTo({ center: CENTRO_TILE, zoom: zoomMinimo });
+      }
     });
   }
 

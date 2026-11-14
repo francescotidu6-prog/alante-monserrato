@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "monserrato-pwa-v3";
+var CACHE_NAME = "monserrato-pwa-v4";
 var DIMENSIONE_PMTILES = 239298;
 var FILES = [
   "./",
