@@ -73,7 +73,7 @@
     }
 
     offline.textContent = "Verifica della cache offline…";
-    navigator.serviceWorker.register("./service-worker.js?v=2", {
+    navigator.serviceWorker.register("./service-worker.js?v=3", {
       scope: "./",
       updateViaCache: "none"
     })

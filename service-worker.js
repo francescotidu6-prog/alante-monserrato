@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "monserrato-pwa-v2";
+var CACHE_NAME = "monserrato-pwa-v3";
 var DIMENSIONE_PMTILES = 239298;
 var FILES = [
   "./",
@@ -170,6 +170,26 @@ function rispostaParziale(request) {
   });
 }
 
+function rispostaNavigazione(request) {
+  return fetch(request).catch(function () {
+    return caches.open(CACHE_NAME).then(function (cache) {
+      return cache.match(request, { ignoreSearch: true })
+        .then(function (response) {
+          return response || cache.match(urlLocale("./index.html"), { ignoreSearch: true });
+        })
+        .then(function (response) {
+          if (response) {
+            return response;
+          }
+          return new Response("Pagina offline mancante: index.html", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" }
+          });
+        });
+    });
+  });
+}
+
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") {
     return;
@@ -177,6 +197,11 @@ self.addEventListener("fetch", function (event) {
 
   if (event.request.headers.has("range")) {
     event.respondWith(rispostaParziale(event.request));
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(rispostaNavigazione(event.request));
     return;
   }
 
