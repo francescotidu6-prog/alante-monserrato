@@ -23,6 +23,18 @@
     <div id="errore"></div>
     <button id="torna-mappa" type="button" disabled>Torna alla mappa</button>
   </section>
+  <section id="recinto-info" aria-live="polite">
+    <strong>Sa Crugi 'e Marmuri</strong>
+    <div>Recinto: 40 metri</div>
+    <button id="attiva-gps" type="button">Attiva GPS</button>
+    <div id="gps-stato">GPS non attivo.</div>
+    <div>Distanza: <span id="gps-distanza">—</span></div>
+    <div>Precisione: <span id="gps-precisione">—</span></div>
+    <div id="storia-sbloccata" hidden>
+      <strong>Storia sbloccata: Monserrato, 1603.</strong><br>
+      Incontra Juanni Furca.
+    </div>
+  </section>
 
   <script src="./vendor/maplibre-gl.js"></script>
   <script src="./vendor/pmtiles.js"></script>

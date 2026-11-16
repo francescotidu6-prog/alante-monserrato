@@ -73,6 +73,54 @@ body {
   opacity: 0.5;
 }
 
+#recinto-info {
+  position: absolute;
+  z-index: 10;
+  bottom: max(34px, calc(env(safe-area-inset-bottom) + 24px));
+  left: max(12px, env(safe-area-inset-left));
+  width: min(270px, calc(100vw - 92px));
+  padding: 10px 13px;
+  border: 1px solid rgb(0 0 0 / 8%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 14%);
+  color: #222;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#attiva-gps {
+  width: 100%;
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: #1d5f8a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+}
+
+#attiva-gps:disabled {
+  opacity: 0.55;
+}
+
+#gps-stato {
+  margin: 3px 0;
+}
+
+#storia-sbloccata {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 7px;
+  background: #e3f3e7;
+  color: #124c2a;
+}
+
+[hidden] {
+  display: none !important;
+}
+
 .maplibregl-ctrl-top-right {
   top: env(safe-area-inset-top);
   right: env(safe-area-inset-right);
